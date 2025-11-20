@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FUMO START 3 → ∞</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            cursor: crosshair;
+        }
+        .fumo {
+            position: fixed;
+            user-select: none;
+            pointer-events: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
+            transition: transform 0.15s ease-out;
+        }
+        #counter {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            z-index: 9999;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+
+<div id="counter">FUMO: 3</div>
+
+<script>
+    const counter = document.getElementById('counter');
+    const fumos = [];
+
+    class BouncingFumo {
+        constructor(x = null, y = null) {
+            this.img = document.createElement('img');
+            this.img.src = "fumo.jpg";  // твой файл в той же папке
+            this.img.classList.add('fumo');
+            document.body.appendChild(this.img);
+
+            this.baseSize = 70 + Math.random() * 110;
+            this.scale = 1;
+            this.size = this.baseSize;
+            this.updateSize();
+
+            // если координаты не переданы — случайное место, иначе там где кликнули
+            this.x = x !== null ? x - this.size / 2 : Math.random() * (window.innerWidth - this.size);
+            this.y = y !== null ? y - this.size / 2 : Math.random() * (window.innerHeight - this.size);
+
+            this.speed = 2 + Math.random() * 6;
+            this.angle = Math.random() * Math.PI * 2;
+            this.vx = Math.cos(this.angle) * this.speed;
+            this.vy = Math.sin(this.angle) * this.speed;
+
+            // клик по самой fumo = увеличивается
+            this.img.onclick = (e) => {
+                e.stopPropagation(); // важно! чтобы не появился ещё один при клике на неё
+                this.scale += 0.8;
+                this.size = this.baseSize * this.scale;
+                this.updateSize();
+                this.img.style.zIndex = Math.floor(this.scale * 100);
+            };
+
+            fumos.push(this);
+            counter.textContent = `FUMO: ${fumos.length}`;
+        }
+
+        updateSize() {
+            this.img.style.width = this.size + 'px';
+            this.img.style.height = this.size + 'px';
+        }
+
+        animate() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            if (this.x <= 0 || this.x + this.size >= window.innerWidth) {
+                this.vx = -this.vx;
+                this.x = Math.max(0, Math.min(window.innerWidth - this.size, this.x));
+            }
+            if (this.y <= 0 || this.y + this.size >= window.innerHeight) {
+                this.vy = -this.vy;
+                this.y = Math.max(0, Math.min(window.innerHeight - this.size, this.y));
+            }
+
+            this.img.style.left = this.x + 'px';
+            this.img.style.top  = this.y + 'px';
+        }
+    }
+
+    // === Стартовая тройка ===
+    for (let i = 0; i < 3; i++) {
+        new BouncingFumo(); // появятся в случайных местах
+    }
+
+    // === Клик где угодно = +1 fumo ===
+    document.addEventListener('click', (e) => {
+        new BouncingFumo(e.clientX, e.clientY);
+    });
+
+    // Анимация
+    function animate() {
+        fumos.forEach(f => f.animate());
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Защита при изменении размера окна
+    window.addEventListener('resize', () => {
+        fumos.forEach(f => {
+            if (f.x + f.size > window.innerWidth)  f.x = window.innerWidth - f.size;
+            if (f.y + f.size > window.innerHeight) f.y = window.innerHeight - f.size;
+        });
+    });
+</script>
+
+</body>
+</html>
