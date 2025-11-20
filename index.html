@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FUMO START 3 → ∞</title>
+    <title>FUMO MULTIPLY</title>
     <style>
         body {
             margin: 0;
@@ -15,10 +15,9 @@
         .fumo {
             position: fixed;
             user-select: none;
-            pointer-events: auto;
+            pointer-events: none; /* клики проходят сквозь них */
             object-fit: contain;
-            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4));
-            transition: transform 0.15s ease-out;
+            filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
         }
         #counter {
             position: fixed;
@@ -50,36 +49,28 @@
             this.img.classList.add('fumo');
             document.body.appendChild(this.img);
 
-            this.baseSize = 70 + Math.random() * 110;
-            this.scale = 1;
-            this.size = this.baseSize;
-            this.updateSize();
+            // фиксированный случайный размер при создании — больше не меняется
+            this.size = 80 + Math.random() * 100;
 
-            // если координаты не переданы — случайное место, иначе там где кликнули
-            this.x = x !== null ? x - this.size / 2 : Math.random() * (window.innerWidth - this.size);
-            this.y = y !== null ? y - this.size / 2 : Math.random() * (window.innerHeight - this.size);
+            this.img.style.width = this.size + 'px';
+            this.img.style.height = this.size + 'px';
+
+            // позиция
+            if (x !== null && y !== null) {
+                this.x = x - this.size / 2;
+                this.y = y - this.size / 2;
+            } else {
+                this.x = Math.random() * (window.innerWidth - this.size);
+                this.y = Math.random() * (window.innerHeight - this.size);
+            }
 
             this.speed = 2 + Math.random() * 6;
             this.angle = Math.random() * Math.PI * 2;
             this.vx = Math.cos(this.angle) * this.speed;
             this.vy = Math.sin(this.angle) * this.speed;
 
-            // клик по самой fumo = увеличивается
-            this.img.onclick = (e) => {
-                e.stopPropagation(); // важно! чтобы не появился ещё один при клике на неё
-                this.scale += 0.8;
-                this.size = this.baseSize * this.scale;
-                this.updateSize();
-                this.img.style.zIndex = Math.floor(this.scale * 100);
-            };
-
             fumos.push(this);
             counter.textContent = `FUMO: ${fumos.length}`;
-        }
-
-        updateSize() {
-            this.img.style.width = this.size + 'px';
-            this.img.style.height = this.size + 'px';
         }
 
         animate() {
@@ -100,24 +91,24 @@
         }
     }
 
-    // === Стартовая тройка ===
+    // стартовые 3 штуки
     for (let i = 0; i < 3; i++) {
-        new BouncingFumo(); // появятся в случайных местах
+        new BouncingFumo();
     }
 
-    // === Клик где угодно = +1 fumo ===
+    // клик где угодно = +1 fumo
     document.addEventListener('click', (e) => {
         new BouncingFumo(e.clientX, e.clientY);
     });
 
-    // Анимация
+    // анимация
     function animate() {
         fumos.forEach(f => f.animate());
         requestAnimationFrame(animate);
     }
     animate();
 
-    // Защита при изменении размера окна
+    // защита от ресайза
     window.addEventListener('resize', () => {
         fumos.forEach(f => {
             if (f.x + f.size > window.innerWidth)  f.x = window.innerWidth - f.size;
